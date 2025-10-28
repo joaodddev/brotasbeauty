@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brotas Beauty | Agendamento Online</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Poppins:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Cabeçalho -->
+      <header>
+        <div class="logo">
+          <div class="logo-icon">🌸</div>
+          <div>
+            <h1>Brotas Beauty</h1>
+            <p>Beleza e Bem-estar</p>
+          </div>
+        </div>
+        <div class="slogan">
+          <p>Realçando sua beleza natural ✨</p>
+        </div>
+      </header>
+
+      <!-- Navegação -->
+      <nav class="services-nav">
+        <ul>
+          <li>
+            <a href="#unhas" class="service-link active" data-service="unhas"
+              >Unhas</a
+            >
+          </li>
+          <li>
+            <a
+              href="#sobrancelhas"
+              class="service-link"
+              data-service="sobrancelhas"
+              >Sobrancelhas</a
+            >
+          </li>
+          <li>
+            <a href="#cilios" class="service-link" data-service="cilios"
+              >Cílios</a
+            >
+          </li>
+          <li>
+            <a href="#skincare" class="service-link" data-service="skincare"
+              >Skincare</a
+            >
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Conteúdo Principal -->
+      <main>
+        <!-- Seleção de Serviço -->
+        <section id="service-selection" class="section active">
+          <h2>Selecione um Serviço</h2>
+          <div class="services-grid">
+            <div class="service-card" data-service="unhas">
+              <div class="service-icon">
+                <i class="fas fa-hand-sparkles"></i>
+              </div>
+              <h3>Unhas</h3>
+              <p>Manicure, pedicure, alongamento e esmaltação em gel</p>
+              <div class="service-time">40-60 min</div>
+            </div>
+            <div class="service-card" data-service="sobrancelhas">
+              <div class="service-icon">
+                <i class="fas fa-eye-brow"></i>
+              </div>
+              <h3>Sobrancelhas</h3>
+              <p>Design, henna e micropigmentação</p>
+              <div class="service-time">30-45 min</div>
+            </div>
+            <div class="service-card" data-service="cilios">
+              <div class="service-icon">
+                <i class="fas fa-eye"></i>
+              </div>
+              <h3>Cílios</h3>
+              <p>Alongamento, volume brasileiro e lifting</p>
+              <div class="service-time">60-90 min</div>
+            </div>
+            <div class="service-card" data-service="skincare">
+              <div class="service-icon">
+                <i class="fas fa-spa"></i>
+              </div>
+              <h3>Skincare</h3>
+              <p>Limpeza de pele, hidratação e tratamentos faciais</p>
+              <div class="service-time">50-80 min</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Seleção de Profissional -->
+        <section id="professional-selection" class="section">
+          <h2>Escolha uma Profissional</h2>
+          <div class="back-button">
+            <button id="back-to-services">&larr; Voltar aos Serviços</button>
+          </div>
+          <div class="professionals-grid">
+            <!-- As profissionais serão carregadas dinamicamente via JavaScript -->
+          </div>
+        </section>
+
+        <!-- Seleção de Data e Horário -->
+        <section id="datetime-selection" class="section">
+          <h2>Escolha Data e Horário</h2>
+          <div class="back-button">
+            <button id="back-to-professionals">
+              &larr; Voltar às Profissionais
+            </button>
+          </div>
+          <div class="datetime-container">
+            <div class="calendar-container">
+              <h3>Selecione uma data</h3>
+              <div class="calendar" id="calendar">
+                <!-- O calendário será gerado dinamicamente via JavaScript -->
+              </div>
+            </div>
+            <div class="time-slots-container">
+              <h3>Horários disponíveis</h3>
+              <div class="time-slots" id="time-slots">
+                <!-- Os horários serão carregados dinamicamente via JavaScript -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Formulário de Agendamento -->
+        <section id="booking-form" class="section">
+          <h2>Finalizar Agendamento</h2>
+          <div class="back-button">
+            <button id="back-to-datetime">&larr; Voltar aos Horários</button>
+          </div>
+          <div class="booking-summary">
+            <h3>Resumo do Agendamento</h3>
+            <div class="summary-details">
+              <p>
+                <strong>Serviço:</strong> <span id="summary-service"></span>
+              </p>
+              <p>
+                <strong>Profissional:</strong>
+                <span id="summary-professional"></span>
+              </p>
+              <p><strong>Data:</strong> <span id="summary-date"></span></p>
+              <p><strong>Horário:</strong> <span id="summary-time"></span></p>
+            </div>
+          </div>
+          <form id="client-form">
+            <div class="form-group">
+              <label for="client-name">Nome Completo *</label>
+              <input type="text" id="client-name" required />
+            </div>
+            <div class="form-group">
+              <label for="client-phone">Telefone *</label>
+              <input type="tel" id="client-phone" required />
+            </div>
+            <div class="form-group">
+              <label for="client-email">E-mail</label>
+              <input type="email" id="client-email" />
+            </div>
+            <div class="form-group">
+              <label for="client-notes">Observações (opcional)</label>
+              <textarea
+                id="client-notes"
+                rows="3"
+                placeholder="Alguma observação sobre o serviço..."
+              ></textarea>
+            </div>
+            <button type="submit" class="btn-primary">
+              <i class="fab fa-whatsapp"></i> Confirmar via WhatsApp
+            </button>
+          </form>
+        </section>
+
+        <!-- Confirmação de Agendamento -->
+        <section id="booking-confirmation" class="section">
+          <div class="confirmation-content">
+            <div class="confirmation-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Agendamento Confirmado!</h2>
+            <div class="confirmation-details">
+              <p>Seu horário foi reservado com sucesso.</p>
+              <div class="confirmation-summary">
+                <p>
+                  <strong>Serviço:</strong> <span id="confirm-service"></span>
+                </p>
+                <p>
+                  <strong>Profissional:</strong>
+                  <span id="confirm-professional"></span>
+                </p>
+                <p><strong>Data:</strong> <span id="confirm-date"></span></p>
+                <p><strong>Horário:</strong> <span id="confirm-time"></span></p>
+              </div>
+              <p class="confirmation-info">
+                Enviamos os detalhes do agendamento para o seu WhatsApp. Em caso
+                de cancelamento, entre em contato com pelo menos 24h de
+                antecedência.
+              </p>
+            </div>
+            <button id="new-booking" class="btn-primary">
+              Fazer Novo Agendamento
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- Promoções -->
+      <aside class="promotions">
+        <h3><i class="fas fa-gift"></i> Promoções do Mês</h3>
+        <div class="promotion-item">
+          <p>
+            <i class="fas fa-hand-sparkles"></i>
+            <strong>Pacote Unhas:</strong> Manicure + Pedicure por R$ 60
+          </p>
+        </div>
+        <div class="promotion-item">
+          <p>
+            <i class="fas fa-eye-brow"></i>
+            <strong>Sobrancelha + Henna:</strong> Apenas R$ 35
+          </p>
+        </div>
+        <div class="promotion-item">
+          <p>
+            <i class="fas fa-eye"></i>
+            <strong>1ª Aplicação de Cílios:</strong> 15% de desconto
+          </p>
+        </div>
+      </aside>
+
+      <!-- Rodapé -->
+      <!-- Rodapé -->
+      <footer>
+        <div class="contact-info">
+          <p>
+            <i class="fas fa-map-marker-alt"></i>
+            <a
+              href="https://maps.google.com/?q=Brotas,SP"
+              target="_blank"
+              class="contact-link"
+            >
+              Brotas - SP
+            </a>
+          </p>
+          <p>
+            <i class="fab fa-whatsapp"></i>
+            <a
+              href="https://wa.me/5514991244578"
+              target="_blank"
+              class="contact-link"
+            >
+              Agende também por telefone: (14) 99124-4578
+            </a>
+          </p>
+        </div>
+        <div class="business-hours">
+          <p><i class="far fa-clock"></i> Segunda a Sábado: 07:00 às 17:30</p>
+        </div>
+        <div class="copyright">
+          <p>&copy; 2025 Brotas Beauty. Todos os direitos reservados.</p>
+        </div>
+      </footer>
+    </div>
+    <script src="js/script.js"></script>
+  </body>
+</html>
