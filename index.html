@@ -1622,22 +1622,24 @@
     </div>
 
     <script>
+      // Substitua TODO o conteúdo do script atual por este código:
+
       // Sistema de Notificações
       function showNotification(message, type = "success") {
         const notification = document.createElement("div");
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
-          <i class="fas fa-${
-            type === "success"
-              ? "check"
-              : type === "error"
-              ? "exclamation-triangle"
-              : type === "warning"
-              ? "exclamation"
-              : "info"
-          }"></i>
-          ${message}
-        `;
+        <i class="fas fa-${
+          type === "success"
+            ? "check"
+            : type === "error"
+            ? "exclamation-triangle"
+            : type === "warning"
+            ? "exclamation"
+            : "info"
+        }"></i>
+        ${message}
+    `;
         document.body.appendChild(notification);
 
         setTimeout(() => {
@@ -1695,6 +1697,8 @@
         selectedDate: null,
         selectedTime: null,
         isAdmin: false,
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear(),
 
         services: {
           unhas: {
@@ -1718,15 +1722,15 @@
         // Sistema de agendamentos
         bookings: JSON.parse(localStorage.getItem("bookings")) || [],
 
-        // Horário de funcionamento
+        // Horário de funcionamento - TODOS OS SERVIÇOS com mesmo horário
         businessHours: {
           start: 8, // 08:00
           end: 17, // 17:00
-          interval: 0.5,
+          interval: 0.5, // Intervalo de 30 minutos
         },
 
-        // Dias da semana (1 = segunda, 2 = terça, ..., 6 = sábado, 0 = domingo)
-        workingDays: [2, 3, 4, 5, 6], // Terça a sábado
+        // Dias da semana (0 = domingo, 1 = segunda, ..., 6 = sábado)
+        workingDays: [1, 2, 3, 4, 5, 6], // Segunda a sábado
       };
 
       // Inicialização do aplicativo
@@ -1831,25 +1835,25 @@
           bookingItem.className = "booking-item";
           bookingItem.innerHTML = `
             <div class="booking-info">
-              <h4>${booking.clientName} • ${booking.phone}</h4>
-              <p>${appData.services[booking.service].name}</p>
-              <p><small>${new Date(booking.date).toLocaleDateString(
-                "pt-BR"
-              )} às ${booking.time}</small></p>
+                <h4>${booking.clientName} • ${booking.phone}</h4>
+                <p>${appData.services[booking.service].name}</p>
+                <p><small>${new Date(booking.date).toLocaleDateString(
+                  "pt-BR"
+                )} às ${booking.time}</small></p>
             </div>
             <div class="booking-actions">
-              <button class="btn-sm btn-confirm" onclick="confirmBooking('${
-                booking.id
-              }')">
-                <i class="fas fa-check"></i>
-              </button>
-              <button class="btn-sm btn-cancel" onclick="cancelBooking('${
-                booking.id
-              }')">
-                <i class="fas fa-times"></i>
-              </button>
+                <button class="btn-sm btn-confirm" onclick="confirmBooking('${
+                  booking.id
+                }')">
+                    <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-sm btn-cancel" onclick="cancelBooking('${
+                  booking.id
+                }')">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-          `;
+        `;
           bookingsList.appendChild(bookingItem);
         });
       }
@@ -1962,8 +1966,8 @@
 
         // Configurar data atual
         const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
+        const currentMonth = appData.currentMonth;
+        const currentYear = appData.currentYear;
 
         // Criar cabeçalho do calendário
         const calendarHeader = document.createElement("div");
@@ -1985,10 +1989,10 @@
         ];
 
         calendarHeader.innerHTML = `
-              <button id="prev-month">&larr;</button>
-              <div class="calendar-month">${monthNames[currentMonth]} ${currentYear}</div>
-              <button id="next-month">&rarr;</button>
-          `;
+        <button id="prev-month">&larr;</button>
+        <div class="calendar-month">${monthNames[currentMonth]} ${currentYear}</div>
+        <button id="next-month">&rarr;</button>
+    `;
 
         calendar.appendChild(calendarHeader);
 
@@ -2030,17 +2034,24 @@
             day === today.getDate() &&
             currentMonth === today.getMonth() &&
             currentYear === today.getFullYear();
+
+          const selectedDate = new Date(currentYear, currentMonth, day);
           const isPast =
-            new Date(currentYear, currentMonth, day) <
+            selectedDate <
             new Date(today.getFullYear(), today.getMonth(), today.getDate());
-          const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
+
+          const dayOfWeek = selectedDate.getDay();
           const isWorkingDay = appData.workingDays.includes(dayOfWeek);
+
+          // Verificar se a data está dentro do período permitido (até março do próximo ano)
+          const maxDate = new Date(today.getFullYear() + 1, 2, 31); // 31 de março do próximo ano
+          const isWithinRange = selectedDate <= maxDate;
 
           if (isToday) {
             dayElement.classList.add("today");
           }
 
-          if (isPast || !isWorkingDay) {
+          if (isPast || !isWorkingDay || !isWithinRange) {
             dayElement.classList.add("disabled");
           } else {
             dayElement.addEventListener("click", function () {
@@ -2067,20 +2078,44 @@
         document
           .getElementById("prev-month")
           .addEventListener("click", function () {
-            // Navegar para mês anterior (simulação)
-            alert(
-              "Funcionalidade de navegação entre meses será implementada na versão completa."
-            );
+            navigateMonth(-1);
           });
 
         document
           .getElementById("next-month")
           .addEventListener("click", function () {
-            // Navegar para próximo mês (simulação)
-            alert(
-              "Funcionalidade de navegação entre meses será implementada na versão completa."
-            );
+            navigateMonth(1);
           });
+      }
+
+      function navigateMonth(direction) {
+        let newMonth = appData.currentMonth + direction;
+        let newYear = appData.currentYear;
+
+        if (newMonth < 0) {
+          newMonth = 11;
+          newYear--;
+        } else if (newMonth > 11) {
+          newMonth = 0;
+          newYear++;
+        }
+
+        // Verificar se a nova data está dentro do período permitido
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() + 1, 2, 31); // 31 de março do próximo ano
+        const newDate = new Date(newYear, newMonth, 1);
+
+        if (newDate > maxDate) {
+          showNotification(
+            "Agendamentos disponíveis apenas até março do próximo ano",
+            "info"
+          );
+          return;
+        }
+
+        appData.currentMonth = newMonth;
+        appData.currentYear = newYear;
+        initializeCalendar();
       }
 
       function loadTimeSlots() {
@@ -2167,7 +2202,7 @@
       function setupBookingForm() {
         const bookingForm = document.getElementById("client-form");
 
-        bookingForm.addEventListener("submit", async function (e) {
+        bookingForm.addEventListener("submit", function (e) {
           e.preventDefault();
 
           // Validar formulário
@@ -2182,8 +2217,16 @@
             return;
           }
 
+          // Gerar ID único para o agendamento
+          const bookingId =
+            "booking_" +
+            Date.now() +
+            "_" +
+            Math.random().toString(36).substr(2, 9);
+
           // Dados do agendamento
           const bookingData = {
+            id: bookingId,
             clientName: name,
             phone: phone,
             email: document.getElementById("client-email").value,
@@ -2191,62 +2234,45 @@
             date: appData.selectedDate,
             time: appData.selectedTime,
             notes: document.getElementById("client-notes").value,
+            timestamp: new Date().toISOString(),
           };
 
           try {
             showLoading("Salvando agendamento...");
 
-            // Enviar para o backend
-            const response = await fetch("/api/bookings", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(bookingData),
-            });
+            // Salvar localmente
+            appData.bookings.push(bookingData);
+            localStorage.setItem("bookings", JSON.stringify(appData.bookings));
 
-            const result = await response.json();
+            // Enviar para WhatsApp
+            sendToWhatsApp(bookingData);
 
-            if (result.success) {
-              // Atualizar lista local
-              appData.bookings.push(result.booking);
-
-              // Enviar para WhatsApp
-              sendToWhatsApp();
-
-              showNotification("Agendamento salvo com sucesso!", "success");
-            } else {
-              showNotification(
-                "Erro ao salvar agendamento: " + result.error,
-                "error"
-              );
-            }
+            showNotification("Agendamento salvo com sucesso!", "success");
           } catch (error) {
             console.error("Erro:", error);
-            showNotification("Erro de conexão com o servidor", "error");
+            showNotification("Erro ao salvar agendamento", "error");
           } finally {
             hideLoading();
           }
         });
       }
-      function sendToWhatsApp() {
-        const name = document.getElementById("client-name").value;
-        const phone = document.getElementById("client-phone").value;
-        const email = document.getElementById("client-email").value;
-        const notes = document.getElementById("client-notes").value;
+
+      function sendToWhatsApp(bookingData) {
+        const name = bookingData.clientName;
+        const phone = bookingData.phone;
+        const email = bookingData.email;
+        const notes = bookingData.notes;
 
         // Formatar data CORRIGIDA - usar a data selecionada
-        const date = new Date(appData.selectedDate + "T00:00:00");
+        const date = new Date(bookingData.date + "T00:00:00");
         const formattedDate = date.toLocaleDateString("pt-BR");
 
         // Criar mensagem para a Brotas Beauty
         let message = `🌸 *NOVO AGENDAMENTO - BROTAS BEAUTY* 🌸\n\n`;
         message += `📋 *DETALHES DO AGENDAMENTO:*\n`;
-        message += `• Serviço: ${
-          appData.services[appData.selectedService].name
-        }\n`;
+        message += `• Serviço: ${appData.services[bookingData.service].name}\n`;
         message += `• Data: ${formattedDate}\n`;
-        message += `• Horário: ${appData.selectedTime}\n\n`;
+        message += `• Horário: ${bookingData.time}\n\n`;
 
         message += `👤 *DADOS DO CLIENTE:*\n`;
         message += `• Nome: ${name}\n`;
@@ -2256,7 +2282,10 @@
 
         message += `Agendamento realizado via site em ${new Date().toLocaleDateString(
           "pt-BR"
-        )} para ${appData.selectedTime}`;
+        )} às ${new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
 
         // Codificar mensagem para URL
         const encodedMessage = encodeURIComponent(message);
@@ -2271,16 +2300,16 @@
         window.open(whatsappURL, "_blank");
 
         // Mostrar confirmação para o cliente
-        showConfirmation();
+        showConfirmation(bookingData);
       }
 
-      function showConfirmation() {
+      function showConfirmation(bookingData) {
         // Atualizar confirmação
         document.getElementById("confirm-service").textContent =
-          appData.services[appData.selectedService].name;
+          appData.services[bookingData.service].name;
 
         // Formatar data CORRIGIDA - usar a data selecionada, não a data atual
-        const date = new Date(appData.selectedDate + "T00:00:00"); // Garantir que usa a data correta
+        const date = new Date(bookingData.date + "T00:00:00"); // Garantir que usa a data correta
         const formattedDate = date.toLocaleDateString("pt-BR", {
           weekday: "long",
           year: "numeric",
@@ -2289,12 +2318,10 @@
         });
 
         document.getElementById("confirm-date").textContent = formattedDate;
-        document.getElementById("confirm-time").textContent =
-          appData.selectedTime;
+        document.getElementById("confirm-time").textContent = bookingData.time;
 
         // Mostrar confirmação
         showSection("booking-confirmation");
-        showNotification("Agendamento realizado com sucesso!", "success");
       }
 
       function setupBackButtons() {
@@ -2336,43 +2363,6 @@
               .querySelector('.service-link[data-service="unhas"]')
               .classList.add("active");
           });
-      }
-      // Carregar agendamentos do servidor
-      async function loadBookingsFromServer() {
-        try {
-          const response = await fetch("/api/bookings");
-          const bookings = await response.json();
-          appData.bookings = bookings;
-          console.log("Agendamentos carregados:", bookings.length);
-        } catch (error) {
-          console.error("Erro ao carregar agendamentos:", error);
-          // Usar dados locais como fallback
-          appData.bookings = JSON.parse(localStorage.getItem("bookings")) || [];
-        }
-      }
-
-      // Atualizar a inicialização do app
-      function initializeApp() {
-        setupServiceNavigation();
-        setupServiceSelection();
-        setupBackButtons();
-        setupBookingForm();
-        initializeCalendar();
-        loadBookingsFromServer(); // ← Adicionar esta linha
-      }
-
-      // Função para enviar um novo agendamento
-      async function enviarAgendamento(dados) {
-        const resposta = await fetch("/api/agendar", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dados),
-        });
-
-        const resultado = await resposta.json();
-        console.log(resultado);
       }
     </script>
   </body>
