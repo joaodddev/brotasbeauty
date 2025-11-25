@@ -2374,28 +2374,6 @@
         const resultado = await resposta.json();
         console.log(resultado);
       }
-
-      // Função para listar agendamentos
-      async function listarAgendamentos() {
-        const resposta = await fetch("/api/listar");
-        const agendamentos = await resposta.json();
-        console.log(agendamentos);
-      }
-
-      async function saveBookingOnServer(booking) {
-        try {
-          const res = await fetch("/api/saveBooking", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ booking }),
-          });
-
-          const data = await res.json();
-          if (!data.success) throw new Error();
-        } catch (err) {
-          showNotification("Erro de conexão com o servidor", "error");
-        }
-      }
     </script>
   </body>
 </html>
