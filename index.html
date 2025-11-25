@@ -2167,7 +2167,7 @@
       function setupBookingForm() {
         const bookingForm = document.getElementById("client-form");
 
-        bookingForm.addEventListener("submit", function (e) {
+        bookingForm.addEventListener("submit", async function (e) {
           e.preventDefault();
 
           // Validar formulário
@@ -2182,9 +2182,8 @@
             return;
           }
 
-          // Salvar agendamento
-          const booking = {
-            id: Date.now().toString(),
+          // Dados do agendamento
+          const bookingData = {
             clientName: name,
             phone: phone,
             email: document.getElementById("client-email").value,
@@ -2192,17 +2191,44 @@
             date: appData.selectedDate,
             time: appData.selectedTime,
             notes: document.getElementById("client-notes").value,
-            timestamp: new Date().toISOString(),
           };
 
-          appData.bookings.push(booking);
-          localStorage.setItem("bookings", JSON.stringify(appData.bookings));
+          try {
+            showLoading("Salvando agendamento...");
 
-          // Enviar para WhatsApp
-          sendToWhatsApp();
+            // Enviar para o backend
+            const response = await fetch("/api/bookings", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(bookingData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              // Atualizar lista local
+              appData.bookings.push(result.booking);
+
+              // Enviar para WhatsApp
+              sendToWhatsApp();
+
+              showNotification("Agendamento salvo com sucesso!", "success");
+            } else {
+              showNotification(
+                "Erro ao salvar agendamento: " + result.error,
+                "error"
+              );
+            }
+          } catch (error) {
+            console.error("Erro:", error);
+            showNotification("Erro de conexão com o servidor", "error");
+          } finally {
+            hideLoading();
+          }
         });
       }
-
       function sendToWhatsApp() {
         const name = document.getElementById("client-name").value;
         const phone = document.getElementById("client-phone").value;
@@ -2310,6 +2336,50 @@
               .querySelector('.service-link[data-service="unhas"]')
               .classList.add("active");
           });
+      }
+      // Carregar agendamentos do servidor
+      async function loadBookingsFromServer() {
+        try {
+          const response = await fetch("/api/bookings");
+          const bookings = await response.json();
+          appData.bookings = bookings;
+          console.log("Agendamentos carregados:", bookings.length);
+        } catch (error) {
+          console.error("Erro ao carregar agendamentos:", error);
+          // Usar dados locais como fallback
+          appData.bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+        }
+      }
+
+      // Atualizar a inicialização do app
+      function initializeApp() {
+        setupServiceNavigation();
+        setupServiceSelection();
+        setupBackButtons();
+        setupBookingForm();
+        initializeCalendar();
+        loadBookingsFromServer(); // ← Adicionar esta linha
+      }
+
+      // Função para enviar um novo agendamento
+      async function enviarAgendamento(dados) {
+        const resposta = await fetch("/api/agendar", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dados),
+        });
+
+        const resultado = await resposta.json();
+        console.log(resultado);
+      }
+
+      // Função para listar agendamentos
+      async function listarAgendamentos() {
+        const resposta = await fetch("/api/listar");
+        const agendamentos = await resposta.json();
+        console.log(agendamentos);
       }
     </script>
   </body>
