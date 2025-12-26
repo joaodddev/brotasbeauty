@@ -1545,7 +1545,7 @@
                   <i class="fab fa-whatsapp"></i> Falar no WhatsApp
                 </a>
                 <a
-                  href="https://www.google.com/maps/place/Av.+Paulo+Delboux+Guimar%C3%A3es,+597+-+Centro,+Brotas+-+SP,+17380-000/@-22.2838313,-48.1219403,17z/data=!4m6!3m5!1s0x94c779b24ac98c41:0x5bf60c71a55e5da!8m2!3d-22.2842085!4d-48.1236998!16s%2Fg%2F11xvmr6t60?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D"
+                  href="https://maps.google.com/?q=Brotas,SP"
                   target="_blank"
                   class="confirmation-link maps"
                 >
@@ -1594,11 +1594,11 @@
           <p>
             <i class="fas fa-map-marker-alt"></i>
             <a
-              href="https://www.google.com/maps/place/Av.+Paulo+Delboux+Guimar%C3%A3es,+597+-+Centro,+Brotas+-+SP,+17380-000/@-22.2838313,-48.1219403,17z/data=!4m6!3m5!1s0x94c779b24ac98c41:0x5bf60c71a55e5da!8m2!3d-22.2842085!4d-48.1236998!16s%2Fg%2F11xvmr6t60?entry=ttu&g_ep=EgoyMDI1MTExNy4wIKXMDSoASAFQAw%3D%3D"
+              href="https://maps.google.com/?q=Brotas,SP"
               class="footer-link"
               target="_blank"
             >
-              Av. Paulo Delboux Guimarães 597, Brotas - SP
+              Av. Paulo Delboux Guimarães, Brotas - SP
             </a>
           </p>
           <p>
@@ -1608,7 +1608,7 @@
               class="footer-link"
               target="_blank"
             >
-              Fale conosco!
+              Whatsapp
             </a>
           </p>
         </div>
@@ -1622,24 +1622,22 @@
     </div>
 
     <script>
-      // Substitua TODO o conteúdo do script atual por este código:
-
       // Sistema de Notificações
       function showNotification(message, type = "success") {
         const notification = document.createElement("div");
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
-        <i class="fas fa-${
-          type === "success"
-            ? "check"
-            : type === "error"
-            ? "exclamation-triangle"
-            : type === "warning"
-            ? "exclamation"
-            : "info"
-        }"></i>
-        ${message}
-    `;
+          <i class="fas fa-${
+            type === "success"
+              ? "check"
+              : type === "error"
+              ? "exclamation-triangle"
+              : type === "warning"
+              ? "exclamation"
+              : "info"
+          }"></i>
+          ${message}
+        `;
         document.body.appendChild(notification);
 
         setTimeout(() => {
@@ -1697,8 +1695,6 @@
         selectedDate: null,
         selectedTime: null,
         isAdmin: false,
-        currentMonth: new Date().getMonth(),
-        currentYear: new Date().getFullYear(),
 
         services: {
           unhas: {
@@ -1722,15 +1718,15 @@
         // Sistema de agendamentos
         bookings: JSON.parse(localStorage.getItem("bookings")) || [],
 
-        // Horário de funcionamento - TODOS OS SERVIÇOS com mesmo horário
+        // Horário de funcionamento
         businessHours: {
           start: 8, // 08:00
           end: 17, // 17:00
-          interval: 0.5, // Intervalo de 30 minutos
+          interval: 0.5,
         },
 
-        // Dias da semana (0 = domingo, 1 = segunda, ..., 6 = sábado)
-        workingDays: [1, 2, 3, 4, 5, 6], // Segunda a sábado
+        // Dias da semana (1 = segunda, 2 = terça, ..., 6 = sábado, 0 = domingo)
+        workingDays: [2, 3, 4, 5, 6], // Terça a sábado
       };
 
       // Inicialização do aplicativo
@@ -1771,6 +1767,55 @@
             }
           });
 
+        // Função para enviar um novo agendamento
+        async function enviarAgendamento(dados) {
+          const resposta = await fetch("/api/agendar", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dados),
+          });
+
+          const resultado = await resposta.json();
+          console.log(resultado);
+        }
+
+        // Função para listar agendamentos
+        async function listarAgendamentos() {
+          const resposta = await fetch("/api/listar");
+          const agendamentos = await resposta.json();
+          console.log(agendamentos);
+        }
+
+        async function saveBookingOnServer(booking) {
+          try {
+            const res = await fetch("/api/saveBooking", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ booking }),
+            });
+
+            const data = await res.json();
+            if (!data.success) throw new Error();
+          } catch (err) {
+            showNotification("Erro de conexão com o servidor", "error");
+          }
+        }
+
+        // Testar conexão ao carregar
+        setTimeout(() => {
+          checkBackendConnection().then((isConnected) => {
+            if (isConnected) {
+              showNotification(
+                "✅ Conectado ao sistema de agendamentos!",
+                "success"
+              );
+            } else {
+              showNotification("⚠️ Modo offline ativado", "warning");
+            }
+          });
+        }, 1000);
         // Voltar para área do cliente
         document
           .getElementById("back-to-client")
@@ -1835,25 +1880,25 @@
           bookingItem.className = "booking-item";
           bookingItem.innerHTML = `
             <div class="booking-info">
-                <h4>${booking.clientName} • ${booking.phone}</h4>
-                <p>${appData.services[booking.service].name}</p>
-                <p><small>${new Date(booking.date).toLocaleDateString(
-                  "pt-BR"
-                )} às ${booking.time}</small></p>
+              <h4>${booking.clientName} • ${booking.phone}</h4>
+              <p>${appData.services[booking.service].name}</p>
+              <p><small>${new Date(booking.date).toLocaleDateString(
+                "pt-BR"
+              )} às ${booking.time}</small></p>
             </div>
             <div class="booking-actions">
-                <button class="btn-sm btn-confirm" onclick="confirmBooking('${
-                  booking.id
-                }')">
-                    <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-sm btn-cancel" onclick="cancelBooking('${
-                  booking.id
-                }')">
-                    <i class="fas fa-times"></i>
-                </button>
+              <button class="btn-sm btn-confirm" onclick="confirmBooking('${
+                booking.id
+              }')">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="btn-sm btn-cancel" onclick="cancelBooking('${
+                booking.id
+              }')">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-        `;
+          `;
           bookingsList.appendChild(bookingItem);
         });
       }
@@ -1966,8 +2011,8 @@
 
         // Configurar data atual
         const today = new Date();
-        const currentMonth = appData.currentMonth;
-        const currentYear = appData.currentYear;
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
 
         // Criar cabeçalho do calendário
         const calendarHeader = document.createElement("div");
@@ -1989,10 +2034,10 @@
         ];
 
         calendarHeader.innerHTML = `
-        <button id="prev-month">&larr;</button>
-        <div class="calendar-month">${monthNames[currentMonth]} ${currentYear}</div>
-        <button id="next-month">&rarr;</button>
-    `;
+              <button id="prev-month">&larr;</button>
+              <div class="calendar-month">${monthNames[currentMonth]} ${currentYear}</div>
+              <button id="next-month">&rarr;</button>
+          `;
 
         calendar.appendChild(calendarHeader);
 
@@ -2034,24 +2079,17 @@
             day === today.getDate() &&
             currentMonth === today.getMonth() &&
             currentYear === today.getFullYear();
-
-          const selectedDate = new Date(currentYear, currentMonth, day);
           const isPast =
-            selectedDate <
+            new Date(currentYear, currentMonth, day) <
             new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-          const dayOfWeek = selectedDate.getDay();
+          const dayOfWeek = new Date(currentYear, currentMonth, day).getDay();
           const isWorkingDay = appData.workingDays.includes(dayOfWeek);
-
-          // Verificar se a data está dentro do período permitido (até março do próximo ano)
-          const maxDate = new Date(today.getFullYear() + 1, 2, 31); // 31 de março do próximo ano
-          const isWithinRange = selectedDate <= maxDate;
 
           if (isToday) {
             dayElement.classList.add("today");
           }
 
-          if (isPast || !isWorkingDay || !isWithinRange) {
+          if (isPast || !isWorkingDay) {
             dayElement.classList.add("disabled");
           } else {
             dayElement.addEventListener("click", function () {
@@ -2078,44 +2116,20 @@
         document
           .getElementById("prev-month")
           .addEventListener("click", function () {
-            navigateMonth(-1);
+            // Navegar para mês anterior (simulação)
+            alert(
+              "Funcionalidade de navegação entre meses será implementada na versão completa."
+            );
           });
 
         document
           .getElementById("next-month")
           .addEventListener("click", function () {
-            navigateMonth(1);
+            // Navegar para próximo mês (simulação)
+            alert(
+              "Funcionalidade de navegação entre meses será implementada na versão completa."
+            );
           });
-      }
-
-      function navigateMonth(direction) {
-        let newMonth = appData.currentMonth + direction;
-        let newYear = appData.currentYear;
-
-        if (newMonth < 0) {
-          newMonth = 11;
-          newYear--;
-        } else if (newMonth > 11) {
-          newMonth = 0;
-          newYear++;
-        }
-
-        // Verificar se a nova data está dentro do período permitido
-        const today = new Date();
-        const maxDate = new Date(today.getFullYear() + 1, 2, 31); // 31 de março do próximo ano
-        const newDate = new Date(newYear, newMonth, 1);
-
-        if (newDate > maxDate) {
-          showNotification(
-            "Agendamentos disponíveis apenas até março do próximo ano",
-            "info"
-          );
-          return;
-        }
-
-        appData.currentMonth = newMonth;
-        appData.currentYear = newYear;
-        initializeCalendar();
       }
 
       function loadTimeSlots() {
@@ -2217,16 +2231,9 @@
             return;
           }
 
-          // Gerar ID único para o agendamento
-          const bookingId =
-            "booking_" +
-            Date.now() +
-            "_" +
-            Math.random().toString(36).substr(2, 9);
-
-          // Dados do agendamento
-          const bookingData = {
-            id: bookingId,
+          // Salvar agendamento
+          const booking = {
+            id: Date.now().toString(),
             clientName: name,
             phone: phone,
             email: document.getElementById("client-email").value,
@@ -2237,79 +2244,140 @@
             timestamp: new Date().toISOString(),
           };
 
-          try {
-            showLoading("Salvando agendamento...");
+          appData.bookings.push(booking);
+          localStorage.setItem("bookings", JSON.stringify(appData.bookings));
 
-            // Salvar localmente
-            appData.bookings.push(bookingData);
-            localStorage.setItem("bookings", JSON.stringify(appData.bookings));
-
-            // Enviar para WhatsApp
-            sendToWhatsApp(bookingData);
-
-            showNotification("Agendamento salvo com sucesso!", "success");
-          } catch (error) {
-            console.error("Erro:", error);
-            showNotification("Erro ao salvar agendamento", "error");
-          } finally {
-            hideLoading();
-          }
+          // Enviar para WhatsApp
+          sendToWhatsApp();
         });
       }
 
-      function sendToWhatsApp(bookingData) {
-        const name = bookingData.clientName;
-        const phone = bookingData.phone;
-        const email = bookingData.email;
-        const notes = bookingData.notes;
+      async function sendToWhatsApp() {
+        const name = document.getElementById("client-name").value;
+        const phone = document.getElementById("client-phone").value;
+        const email = document.getElementById("client-email").value;
+        const notes = document.getElementById("client-notes").value;
 
-        // Formatar data CORRIGIDA - usar a data selecionada
-        const date = new Date(bookingData.date + "T00:00:00");
-        const formattedDate = date.toLocaleDateString("pt-BR");
+        // Validar campos obrigatórios
+        if (!name || !phone) {
+          showNotification(
+            "Por favor, preencha pelo menos nome e telefone.",
+            "error"
+          );
+          return;
+        }
 
-        // Criar mensagem para a Brotas Beauty
-        let message = `🌸 *NOVO AGENDAMENTO - BROTAS BEAUTY* 🌸\n\n`;
-        message += `📋 *DETALHES DO AGENDAMENTO:*\n`;
-        message += `• Serviço: ${appData.services[bookingData.service].name}\n`;
-        message += `• Data: ${formattedDate}\n`;
-        message += `• Horário: ${bookingData.time}\n\n`;
+        // Criar objeto do agendamento
+        const appointmentData = {
+          clientName: name,
+          clientPhone: phone,
+          clientEmail: email || "",
+          service: appData.selectedService,
+          date: appData.selectedDate,
+          time: appData.selectedTime,
+          notes: notes || "",
+        };
 
-        message += `👤 *DADOS DO CLIENTE:*\n`;
-        message += `• Nome: ${name}\n`;
-        message += `• Telefone: ${phone}\n`;
-        if (email) message += `• E-mail: ${email}\n`;
-        if (notes) message += `• Observações: ${notes}\n\n`;
+        // Mostrar loading
+        showLoading("Salvando agendamento...");
 
-        message += `Agendamento realizado via site em ${new Date().toLocaleDateString(
-          "pt-BR"
-        )} às ${new Date().toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`;
+        try {
+          // 1. Tentar salvar no backend
+          console.log("📤 Enviando para backend:", appointmentData);
 
-        // Codificar mensagem para URL
-        const encodedMessage = encodeURIComponent(message);
+          const response = await fetch(APPOINTMENTS_API, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(appointmentData),
+          });
 
-        // Número do WhatsApp da Brotas Beauty
-        const whatsappNumber = "5514991244578";
+          const result = await response.json();
+          console.log("✅ Resposta do backend:", result);
 
-        // Criar URL do WhatsApp - ENVIA PARA A BROTAS BEAUTY
-        const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+          if (!result.success) {
+            throw new Error(result.error || "Erro ao salvar no sistema");
+          }
 
-        // Abrir WhatsApp em nova aba (para a Brotas Beauty receber o agendamento)
-        window.open(whatsappURL, "_blank");
+          // 2. Preparar mensagem para WhatsApp
+          const date = new Date(appData.selectedDate + "T00:00:00");
+          const formattedDate = date.toLocaleDateString("pt-BR", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
 
-        // Mostrar confirmação para o cliente
-        showConfirmation(bookingData);
+          let message = `🌸 *NOVO AGENDAMENTO - BROTAS BEAUTY* 🌸\n\n`;
+          message += `📋 *DETALHES DO AGENDAMENTO:*\n`;
+          message += `• Serviço: ${
+            appData.services[appData.selectedService].name
+          }\n`;
+          message += `• Data: ${formattedDate}\n`;
+          message += `• Horário: ${appData.selectedTime}\n\n`;
+          message += `👤 *DADOS DO CLIENTE:*\n`;
+          message += `• Nome: ${name}\n`;
+          message += `• Telefone: ${phone}\n`;
+          if (email) message += `• E-mail: ${email}\n`;
+          if (notes) message += `• Observações: ${notes}\n\n`;
+          message += `📅 _Realizado via site em ${new Date().toLocaleDateString(
+            "pt-BR"
+          )}_\n`;
+          message += `🆔 _ID: ${result.data.id}_`;
+
+          // 3. Abrir WhatsApp
+          const encodedMessage = encodeURIComponent(message);
+          const whatsappURL = `https://wa.me/5514991244578?text=${encodedMessage}`;
+
+          // 4. Mostrar confirmação
+          hideLoading();
+          showNotification("Agendamento salvo com sucesso!", "success");
+
+          // Atualizar confirmação
+          document.getElementById("confirm-service").textContent =
+            appData.services[appData.selectedService].name;
+          document.getElementById("confirm-date").textContent = formattedDate;
+          document.getElementById("confirm-time").textContent =
+            appData.selectedTime;
+
+          // Mostrar seção de confirmação
+          showSection("booking-confirmation");
+
+          // 5. Abrir WhatsApp (com pequeno delay)
+          setTimeout(() => {
+            window.open(whatsappURL, "_blank");
+          }, 1000);
+        } catch (error) {
+          hideLoading();
+          console.error("❌ Erro:", error);
+
+          // Modo offline: salvar localmente
+          const localData = JSON.parse(
+            localStorage.getItem("brotasBookings") || "[]"
+          );
+          appointmentData.id = "local_" + Date.now();
+          appointmentData.timestamp = new Date().toISOString();
+          localData.push(appointmentData);
+          localStorage.setItem("brotasBookings", JSON.stringify(localData));
+
+          showNotification(
+            "Agendamento salvo localmente (modo offline)",
+            "warning"
+          );
+
+          // Ainda tenta enviar para WhatsApp
+          // ... (mantenha o código original do WhatsApp aqui)
+        }
       }
 
-      function showConfirmation(bookingData) {
+      function showConfirmation() {
         // Atualizar confirmação
         document.getElementById("confirm-service").textContent =
-          appData.services[bookingData.service].name;
+          appData.services[appData.selectedService].name;
 
         // Formatar data CORRIGIDA - usar a data selecionada, não a data atual
-        const date = new Date(bookingData.date + "T00:00:00"); // Garantir que usa a data correta
+        const date = new Date(appData.selectedDate + "T00:00:00"); // Garantir que usa a data correta
         const formattedDate = date.toLocaleDateString("pt-BR", {
           weekday: "long",
           year: "numeric",
@@ -2318,10 +2386,12 @@
         });
 
         document.getElementById("confirm-date").textContent = formattedDate;
-        document.getElementById("confirm-time").textContent = bookingData.time;
+        document.getElementById("confirm-time").textContent =
+          appData.selectedTime;
 
         // Mostrar confirmação
         showSection("booking-confirmation");
+        showNotification("Agendamento realizado com sucesso!", "success");
       }
 
       function setupBackButtons() {
@@ -2363,6 +2433,258 @@
               .querySelector('.service-link[data-service="unhas"]')
               .classList.add("active");
           });
+        // Configuração da API
+        const API_BASE_URL = "http://localhost:3001/api";
+        const APPOINTMENTS_API = `${API_BASE_URL}/appointments`;
+
+        // Armazenamento local para modo offline
+        const STORAGE_KEY = "brotasBeautyAppointments";
+
+        // Classe para gerenciar sincronização
+        class AppointmentSync {
+          constructor() {
+            this.lastSync =
+              localStorage.getItem("lastSync") || new Date().toISOString();
+            this.offlineQueue = JSON.parse(
+              localStorage.getItem("offlineQueue") || "[]"
+            );
+            this.initSync();
+          }
+
+          // Salvar agendamento localmente
+          saveLocal(appointment) {
+            const appointments = this.getLocalAppointments();
+
+            // Gerar syncId se não existir
+            if (!appointment.syncId) {
+              appointment.syncId = `local_${Date.now()}_${Math.random()
+                .toString(36)
+                .substr(2, 9)}`;
+            }
+
+            appointment.isSynced = false;
+            appointment.updatedAt = new Date().toISOString();
+
+            appointments.push(appointment);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appointments));
+
+            // Adicionar à fila de sincronização
+            this.addToSyncQueue(appointment);
+
+            return appointment;
+          }
+
+          // Obter agendamentos locais
+          getLocalAppointments() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          }
+
+          // Adicionar à fila de sincronização
+          addToSyncQueue(appointment) {
+            this.offlineQueue.push(appointment);
+            localStorage.setItem(
+              "offlineQueue",
+              JSON.stringify(this.offlineQueue)
+            );
+          }
+
+          // Sincronizar com o servidor
+          async syncWithServer() {
+            if (!navigator.onLine) {
+              console.log("Modo offline - sincronização pendente");
+              return;
+            }
+
+            try {
+              const localAppointments = this.getLocalAppointments();
+
+              if (localAppointments.length === 0) {
+                return;
+              }
+
+              const response = await fetch(`${APPOINTMENTS_API}/sync`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  appointments: localAppointments.filter((a) => !a.isSynced),
+                  lastSync: this.lastSync,
+                }),
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                // Atualizar localStorage com dados do servidor
+                localStorage.setItem(
+                  STORAGE_KEY,
+                  JSON.stringify(
+                    localAppointments.map((app) => {
+                      const serverApp = result.data.serverUpdates.find(
+                        (s) => s.syncId === app.syncId
+                      );
+                      return serverApp
+                        ? { ...app, ...serverApp, isSynced: true }
+                        : app;
+                    })
+                  )
+                );
+
+                this.lastSync = new Date().toISOString();
+                localStorage.setItem("lastSync", this.lastSync);
+
+                // Limpar fila offline
+                localStorage.removeItem("offlineQueue");
+                this.offlineQueue = [];
+
+                console.log("Sincronização concluída com sucesso!");
+              }
+            } catch (error) {
+              console.error("Erro na sincronização:", error);
+            }
+          }
+
+          // Iniciar sincronização automática
+          initSync() {
+            // Sincronizar quando voltar online
+            window.addEventListener("online", () => {
+              this.syncWithServer();
+            });
+
+            // Tentar sincronizar a cada 5 minutos
+            setInterval(() => {
+              this.syncWithServer();
+            }, 5 * 60 * 1000);
+
+            // Sincronizar inicialmente
+            this.syncWithServer();
+          }
+        }
+
+        // Funções para interagir com a API
+        const appointmentAPI = {
+          // Criar agendamento
+          async create(appointmentData) {
+            const syncManager = new AppointmentSync();
+
+            if (!navigator.onLine) {
+              // Modo offline: salvar localmente
+              const localApp = syncManager.saveLocal(appointmentData);
+              return {
+                success: true,
+                data: localApp,
+                message: "Agendamento salvo localmente (modo offline)",
+              };
+            }
+
+            try {
+              const response = await fetch(APPOINTMENTS_API, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(appointmentData),
+              });
+
+              return await response.json();
+            } catch (error) {
+              // Se falhar, salvar localmente
+              const localApp = syncManager.saveLocal(appointmentData);
+              return {
+                success: true,
+                data: localApp,
+                message: "Salvo localmente devido a erro de conexão",
+              };
+            }
+          },
+
+          // Listar agendamentos
+          async getAll(filters = {}) {
+            const syncManager = new AppointmentSync();
+
+            // Primeiro buscar do servidor se estiver online
+            if (navigator.onLine) {
+              try {
+                const queryParams = new URLSearchParams(filters).toString();
+                const response = await fetch(
+                  `${APPOINTMENTS_API}?${queryParams}`
+                );
+
+                if (response.ok) {
+                  const result = await response.json();
+
+                  // Mesclar com dados locais não sincronizados
+                  const localAppointments = syncManager
+                    .getLocalAppointments()
+                    .filter((app) => !app.isSynced);
+
+                  result.data = [...result.data, ...localAppointments];
+                  return result;
+                }
+              } catch (error) {
+                console.warn(
+                  "Erro ao buscar do servidor, usando dados locais:",
+                  error
+                );
+              }
+            }
+
+            // Se offline ou erro, usar dados locais
+            const localAppointments = syncManager.getLocalAppointments();
+
+            // Aplicar filtros localmente
+            let filtered = localAppointments;
+
+            if (filters.startDate && filters.endDate) {
+              filtered = filtered.filter((app) => {
+                const appDate = new Date(app.date);
+                return (
+                  appDate >= new Date(filters.startDate) &&
+                  appDate <= new Date(filters.endDate)
+                );
+              });
+            }
+
+            if (filters.professional) {
+              filtered = filtered.filter(
+                (app) => app.professional === filters.professional
+              );
+            }
+
+            return {
+              success: true,
+              count: filtered.length,
+              data: filtered,
+            };
+          },
+        };
+
+        // Inicializar sincronização quando a página carregar
+        document.addEventListener("DOMContentLoaded", function () {
+          const syncManager = new AppointmentSync();
+
+          // Exemplo de uso:
+          // Salvar um agendamento
+          const newAppointment = {
+            clientName: "Cliente Exemplo",
+            clientPhone: "11999999999",
+            service: "Corte de Cabelo",
+            date: "2024-12-20",
+            time: "14:30",
+            professional: "Maria",
+            duration: 60,
+          };
+
+          // Para criar um agendamento:
+          // appointmentAPI.create(newAppointment).then(console.log);
+
+          // Para buscar agendamentos:
+          // appointmentAPI.getAll({
+          //   startDate: '2024-12-01',
+          //   endDate: '2024-12-31'
+          // }).then(console.log);
+        });
       }
     </script>
   </body>
